@@ -7,6 +7,9 @@ from urllib.parse import urlparse
 import unicodedata 
 import pdfplumber
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+
 pittsburgh_list_html = [
     "https://en.wikipedia.org/wiki/Pittsburgh", 
     "https://www.pittsburghpa.gov/Home",
@@ -26,34 +29,41 @@ def read_pdf(file, input_path, output_path):
 def url_to_id(url):
     return hashlib.sha256(url.encode()).hexdigest()
 
+def normalize_text(text: str) -> str:
+    """Unicode normalize, collapse whitespace, limit blank lines."""
+    text = unicodedata.normalize("NFKC", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
 def read_html(url):
     try:
         # Extract content 
         html_content = fetch_url(url)
-        text = extract(html_content, output_format="markdown", with_metadata=True)
-        title = extract_metadata(html_content).title
-
-        if not text:
+        if not html_content:
+            logger.warning(f"Empty response for {url}")
             return None
 
-        # Normalize 
-        normalized_text = unicodedata.normalize("NFKC", text)
-        # Remove white space
-        normalized_text = re.sub(r'[ \t]+', ' ', normalized_text)
-        normalized_text = re.sub(r'\n{3,}', '\n\n', normalized_text)
+        text = extract(html_content, output_format="markdown", with_metadata=True)
+        if not text:
+            logger.warning(f"No extractable text at {url}")
+            return None
 
-        doc_id = url_to_id(url)
+        meta = extract_metadata(html_content)
+        title = meta.title if meta else None
 
         return {
-            "doc_id": doc_id,
+            "doc_id": url_to_id(url),
             "source_url": url,
-            "title": title,
-            "text": normalized_text,
-            "crawl_timestamp": datetime.datetime.now()
+            "title": title or "",
+            "text": normalize_text(text),
+            "doc_type": "html",
+            "crawl_timestamp": datetime.datetime.now().isoformat(),
         }
     
     except Exception as e:
-        print("An error occurred:", e) 
+        logger.error(f"read_html failed for {url}: {e}")
+        return None
 
 def chunk_text(text, max_words=300, overlap=50):
     words = text.split()
