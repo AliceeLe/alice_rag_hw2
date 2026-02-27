@@ -1,12 +1,6 @@
 import json
-import logging
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-
-BATCH_SIZE = 64
 
 def load_chunks() -> list[dict]:
     chunks = []
@@ -15,24 +9,15 @@ def load_chunks() -> list[dict]:
             line = line.strip()
             if line:
                 chunks.append(json.loads(line))
-    logger.info(f"Loaded {len(chunks)} chunks from documents.jsonl")
     return chunks
 
 
 def embed_chunks(chunks: list[dict]) -> np.ndarray:
     model = SentenceTransformer("all-MiniLM-L6-v2")
-
-    texts = [chunk["text"] for chunk in chunks]
-
-    logger.info(f"Embedding {len(texts)} chunks in batches of {BATCH_SIZE}...")
-    embeddings = model.encode(
-        texts,
-        batch_size=BATCH_SIZE,
-        show_progress_bar=True,
-        convert_to_numpy=True,
-    )
-
-    logger.info(f"Done. Embedding matrix shape: {embeddings.shape}")
+    texts = []
+    for chunk in chunks:
+        texts.append(chunk["text"])
+    embeddings = model.encode(texts, batch_size=64, show_progress_bar=True, convert_to_numpy=True)
     return embeddings
 
 
@@ -40,7 +25,7 @@ def save_embeddings(chunks: list[dict], embeddings: np.ndarray) -> None:
     # Save the vectors
     np.save("embeddings.npy", embeddings)
 
-    # Save the metadata — everything except the text itself
+    # Save the metadata 
     metadata = []
     for i, chunk in enumerate(chunks):
         metadata.append({
@@ -62,4 +47,3 @@ if __name__ == "__main__":
     chunks = load_chunks()
     embeddings = embed_chunks(chunks)
     save_embeddings(chunks, embeddings)
-    logger.info("Embedding complete.")
