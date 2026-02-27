@@ -1,5 +1,4 @@
 import requests
-import time
 import json
 import logging
 from bs4 import BeautifulSoup
@@ -48,28 +47,6 @@ SEED_URLS = [
 ]
 
 
-# Depth per domain — how many link-hops to follow
-DOMAIN_MAX_DEPTH = {
-    "en.wikipedia.org": 1,
-    "www.visitpittsburgh.com": 2,
-    "www.pittsburghpa.gov": 2,
-    "events.cmu.edu": 2,
-    "www.cmu.edu": 2,
-    "pittsburghsymphony.org": 2,
-    "carnegiemuseums.org": 2,
-    "heinzhistorycenter.org": 2,
-    "www.pghcitypaper.com": 1,
-    "www.downtownpittsburgh.com": 2,
-    "trustarts.org": 2,
-}
-DEFAULT_MAX_DEPTH = 1
-
-MAX_PAGES_PER_DOMAIN = 50
-CRAWL_DELAY = 0.5  # seconds between requests
-
-# ─────────────────────────────────────────────
-# URL filtering
-# ─────────────────────────────────────────────
 SKIP_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".gif", ".svg",
     ".css", ".js", ".zip", ".mp3", ".mp4",
@@ -83,7 +60,7 @@ SKIP_PATTERNS = [
 ]
 
 
-def is_valid_url(url: str) -> bool:
+def is_valid_url(url):
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         return False
@@ -95,10 +72,7 @@ def is_valid_url(url: str) -> bool:
     return True
 
 
-# ─────────────────────────────────────────────
-# Core BFS crawler (single domain)
-# ─────────────────────────────────────────────
-def bfs_crawl_domain(start_url: str, max_depth: int, max_pages: int) -> set[str]:
+def bfs_crawl_domain(start_url):
     """BFS crawl staying within the same domain as start_url."""
     visited: set[str] = set()
     queue: deque[tuple[str, int]] = deque()
@@ -110,12 +84,6 @@ def bfs_crawl_domain(start_url: str, max_depth: int, max_pages: int) -> set[str]
     while queue:
         current_url, depth = queue.popleft()
 
-        if len(visited) >= max_pages:
-            logger.info(f"  Hit page cap ({max_pages}) for {base_domain}")
-            break
-
-        logger.info(f"  [depth={depth}] {current_url}")
-
         try:
             resp = requests.get(current_url, timeout=8)
             resp.raise_for_status()
@@ -123,12 +91,6 @@ def bfs_crawl_domain(start_url: str, max_depth: int, max_pages: int) -> set[str]
             if "text/html" not in content_type:
                 continue
         except requests.RequestException as e:
-            logger.warning(f"  Request failed: {current_url} — {e}")
-            continue
-
-        time.sleep(CRAWL_DELAY)
-
-        if depth >= max_depth:
             continue
 
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -147,33 +109,16 @@ def bfs_crawl_domain(start_url: str, max_depth: int, max_pages: int) -> set[str]
     return visited
 
 
-# ─────────────────────────────────────────────
-# Crawl all seeds
-# ─────────────────────────────────────────────
-def crawl_all(seed_urls: list[str] = SEED_URLS) -> list[str]:
-    """
-    Crawl all seed URLs and return a flat sorted list of discovered HTML URLs.
-    """
-    all_urls: set[str] = set()
+def crawl_all():
+    all_urls = set()
 
-    for seed in seed_urls:
-        domain = urlparse(seed).netloc
-        max_depth = DEFAULT_MAX_DEPTH
-
-        logger.info(f"\n{'='*60}")
-        logger.info(f"Crawling: {seed}  (max_depth={max_depth})")
-        logger.info(f"{'='*60}")
-
-        discovered = bfs_crawl_domain(seed, max_depth, MAX_PAGES_PER_DOMAIN)
+    for seed in SEED_URLS:
+        discovered = bfs_crawl_domain(seed)
         all_urls.update(discovered)
-        logger.info(f"  Found {len(discovered)} URLs from {domain}")
 
     return sorted(all_urls)
 
 
-# ─────────────────────────────────────────────
-# Entry point
-# ─────────────────────────────────────────────
 if __name__ == "__main__":
     urls = crawl_all()
 
