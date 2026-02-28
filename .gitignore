@@ -3,3 +3,4 @@ documents.jsonl
 crawled_urls.json
 .DS_Store
 *.log
+.env
