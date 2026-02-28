@@ -73,17 +73,12 @@ def is_valid_url(url):
 
 
 def bfs_crawl_domain(start_url):
-    """BFS crawl staying within the same domain as start_url."""
+    """Crawl only the seed page and its immediate links (2 levels)."""
     visited: set[str] = set()
-    queue: deque[tuple[str, int]] = deque()
-
-    base_domain = urlparse(start_url).netloc
-    queue.append((start_url, 0))
     visited.add(start_url)
+    to_crawl = [start_url]
 
-    while queue:
-        current_url, depth = queue.popleft()
-
+    for current_url in to_crawl:
         try:
             resp = requests.get(current_url, timeout=8)
             resp.raise_for_status()
@@ -91,23 +86,26 @@ def bfs_crawl_domain(start_url):
             if "text/html" not in content_type:
                 continue
         except requests.RequestException as e:
+            logger.warning(f"Failed to fetch {current_url}: {e}")
             continue
-
+        logger.info(f"Crawling URL: {current_url}")
         soup = BeautifulSoup(resp.text, "html.parser")
+        base_domain = urlparse(start_url).netloc
         for tag in soup.find_all("a", href=True):
-            # Strip URL fragments (#section) — they point to the same page
             next_url = urljoin(current_url, tag["href"]).split("#")[0]
-
             if not is_valid_url(next_url):
                 continue
             if urlparse(next_url).netloc != base_domain:
                 continue
             if next_url not in visited:
+                # Don't want to store different languages
+                if "oc_lang" in next_url:
+                    continue
                 visited.add(next_url)
-                queue.append((next_url, depth + 1))
-
+                if current_url == start_url:
+                    to_crawl.append(next_url)
+                logger.info(f"Discovered (2 levels) URL: {next_url}")
     return visited
-
 
 def crawl_all():
     all_urls = set()
