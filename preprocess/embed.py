@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 
 def load_chunks() -> list[dict]:
     chunks = []
-    with open("documents.jsonl", "r", encoding="utf-8") as f:
+    with open("data/documents.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -23,7 +23,7 @@ def embed_chunks(chunks: list[dict]) -> np.ndarray:
 
 def save_embeddings(chunks: list[dict], embeddings: np.ndarray) -> None:
     # Save the vectors
-    np.save("embeddings.npy", embeddings)
+    np.save("data/embeddings.npy", embeddings)
 
     # Save the metadata 
     metadata = []
@@ -40,7 +40,7 @@ def save_embeddings(chunks: list[dict], embeddings: np.ndarray) -> None:
             "text":       chunk["text"],
         })
 
-    with open("metadata.json", "w", encoding="utf-8") as f:
+    with open("data/metadata.json", "w", encoding="utf-8") as f:
         json.dump(metadata, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":

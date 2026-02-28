@@ -1,14 +1,11 @@
-import requests
-import json
-import logging
+import requests, json, logging
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from collections import deque
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-SEED_URLS = [
+URL_LIST = [
     # General info / history
     "https://en.wikipedia.org/wiki/Pittsburgh",
     "https://en.wikipedia.org/wiki/History_of_Pittsburgh",
@@ -109,18 +106,16 @@ def bfs_crawl_domain(start_url):
 
 def crawl_all():
     all_urls = set()
-
-    for seed in SEED_URLS:
+    for seed in URL_LIST:
         discovered = bfs_crawl_domain(seed)
         all_urls.update(discovered)
-
     return sorted(all_urls)
 
 
 if __name__ == "__main__":
     urls = crawl_all()
 
-    output_file = "crawled_urls.json"
+    output_file = "data/crawled_urls.json"
     with open(output_file, "w") as f:
         json.dump(urls, f, indent=2)
 

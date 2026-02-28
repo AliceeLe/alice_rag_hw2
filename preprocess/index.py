@@ -5,11 +5,11 @@ from embed import load_chunks
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-EMBEDDINGS_FILE  = "embeddings.npy"
-METADATA_FILE    = "metadata.json"
-DOCUMENTS_FILE   = "documents.jsonl"
-FAISS_INDEX_FILE = "faiss.index"
-BM25_INDEX_FILE  = "bm25.index"
+EMBEDDINGS_FILE  = "data/embeddings.npy"
+METADATA_FILE    = "data/metadata.json"
+DOCUMENTS_FILE   = "data/documents.jsonl"
+FAISS_INDEX_FILE = "data/faiss.index"
+BM25_INDEX_FILE  = "data/bm25.index"
 
 
 def build_faiss_index() -> faiss.Index:

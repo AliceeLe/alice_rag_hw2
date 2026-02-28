@@ -11,7 +11,7 @@ write_lock = __import__("threading").Lock()
 def write_chunks(chunks: list[dict]):
     """Write chunks to JSONL. Lock ensures threads don't interleave writes."""
     with write_lock:
-        with open("documents.jsonl", "a", encoding="utf-8") as f:
+        with open("data/documents.jsonl", "a", encoding="utf-8") as f:
             for chunk in chunks:
                 f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
 
@@ -58,9 +58,8 @@ def process_pdf(urls: list[str], max_workers: int = 4) -> None:
     logger.info("PDF done.")
 
 if __name__ == "__main__":
-    with open("crawled_urls.json") as f:
+    with open("data/crawled_urls.json") as f:
         all_urls = json.load(f)
-
     html_urls = [u for u in all_urls if not u.endswith(".pdf")]
     pdf_urls = [u for u in all_urls if u.endswith(".pdf")]
 
