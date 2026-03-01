@@ -50,7 +50,7 @@ def run_pipeline():
             failed.append(qid)
 
         # Save after every question in case of crashes
-        save_answers(answers, "data/output.json")
+        save_answers(answers)
         print("Done")
 
     logger.info(f"Output saved to {"data/output.json"}")

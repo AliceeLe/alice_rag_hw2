@@ -1,5 +1,4 @@
-documents.jsonl
-crawled_urls.json
+data/
 .DS_Store
 *.log
 .env

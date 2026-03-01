@@ -43,10 +43,15 @@ def rrf(dense_idxs, sparse_idxs, k=RRF_K):
     return [idx for idx, _ in ranked]
 
 
-def retrieve(query, faiss_idx, bm25, meta, model, top_k=FINAL_TOP_K):
-    dense_results  = dense_search(query, faiss_idx, model)
-    sparse_results = sparse_search(query, bm25)
-    combined       = rrf(dense_results, sparse_results)
+def retrieve(query, faiss_idx, bm25, meta, model, top_k=FINAL_TOP_K, mode="hybrid"):
+    if mode == "dense":
+        combined = dense_search(query, faiss_idx, model)
+    elif mode == "sparse":
+        combined = sparse_search(query, bm25)
+    else:  # hybrid
+        dense_results  = dense_search(query, faiss_idx, model)
+        sparse_results = sparse_search(query, bm25)
+        combined       = rrf(dense_results, sparse_results)
 
     chunks = []
     for idx in combined[:top_k]:
