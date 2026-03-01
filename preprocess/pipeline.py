@@ -14,7 +14,6 @@ def load_questions(path: str = "data/test_set_day_3.txt") -> dict[str, str]:
             line = line.strip()
             if line:
                 questions[str(i)] = line
-    logger.info(f"Loaded {len(questions)} questions from {path}")
     return questions
 
 
@@ -39,7 +38,7 @@ def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: s
     for qid, question in questions.items():
         logger.info(f"[{qid}/{total}] {question}")
         try:
-            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode="dense")
+            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode="hybrid")
             answer = generate(question, chunks)
             answers[qid] = answer
             logger.info(f"  → {answer}")

@@ -58,24 +58,5 @@ def retrieve(query, faiss_idx, bm25, meta, model, top_k=FINAL_TOP_K, mode="hybri
         if idx < len(meta):
             chunks.append(meta[idx])
 
-    logger.info(f"'{query}' → {len(chunks)} chunks retrieved")
     return chunks
 
-
-if __name__ == "__main__":
-    faiss_idx, bm25, meta, model = load_indexes()
-
-    queries = [
-        "When was Pittsburgh founded?",
-        "What is Picklesburgh?",
-        "Who plays for the Pittsburgh Steelers?",
-    ]
-
-    for q in queries:
-        print(f"\n{q}")
-        print("-" * 40)
-        results = retrieve(q, faiss_idx, bm25, meta, model)
-        for i, chunk in enumerate(results):
-            print(f"[{i+1}] {chunk['title']}")
-            print(chunk["text"][:200])
-            print()

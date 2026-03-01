@@ -30,7 +30,7 @@ def build_prompt(query, chunks):
         context_parts.append(text)
     context = " ".join(context_parts)
 
-    return f"Answer the question based on the context. Context: {context} Question: {query} Answer:"
+    return f"Answer the question based on the context and the info provided. Context: {context} Question: {query} Answer:"
 
 
 def call_llm(prompt):
@@ -42,7 +42,7 @@ def call_llm(prompt):
 
 def generate(query, chunks):
     if not chunks:
-        return "I don't know."
+        return "N/A"
     try:
         prompt = build_prompt(query, chunks)
         answer = call_llm(prompt)
@@ -50,23 +50,4 @@ def generate(query, chunks):
         return answer
     except Exception as e:
         logger.error(f"Generation failed: {e}")
-        return "I don't know."
-
-
-if __name__ == "__main__":
-    from retrieve import load_indexes, retrieve
-
-    faiss_idx, bm25, meta, model = load_indexes()
-
-    queries = [
-        "When was Pittsburgh founded?",
-        "What is Picklesburgh?",
-        "Who plays for the Pittsburgh Steelers?",
-    ]
-
-    for q in queries:
-        print(f"\n{'='*60}")
-        print(f"Q: {q}")
-        chunks = retrieve(q, faiss_idx, bm25, meta, model)
-        answer = generate(q, chunks)
-        print(f"A: {answer}")
+        return "N/A"
