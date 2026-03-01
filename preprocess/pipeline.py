@@ -38,7 +38,7 @@ def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: s
     for qid, question in questions.items():
         logger.info(f"[{qid}/{total}] {question}")
         try:
-            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode="hybrid")
+            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode="sparse")
             answer = generate(question, chunks)
             answers[qid] = answer
             logger.info(f"  → {answer}")
