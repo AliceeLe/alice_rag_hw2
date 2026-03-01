@@ -14,7 +14,8 @@ URL_LIST = [
     "https://www.visitpittsburgh.com",
     "https://www.cmu.edu/about/",
     "https://www.cmu.edu/about/history.shtml",
-
+    "https://www.visitpittsburgh.com/things-to-do/arts-culture/history/",
+    
     # Events
     "https://www.visitpittsburgh.com/events/",
     "https://www.downtownpittsburgh.com/events/",
