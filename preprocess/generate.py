@@ -19,7 +19,11 @@ def load_model():
         return _tokenizer, _model
     logger.info(f"Loading {MODEL_ID}...")
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    _model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
+    _model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        torch_dtype=torch.float16, 
+        device_map="auto"          
+    )
     _model.eval()
     logger.info("Model loaded.")
     return _tokenizer, _model
