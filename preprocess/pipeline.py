@@ -20,9 +20,10 @@ def load_questions(path: str = "data/test_set_day_3.txt") -> dict[str, str]:
 
 def save_answers(answers: dict[str, str], path: str = "data/output.json") -> None:
     os.makedirs("data", exist_ok=True)
+    output = {"andrewid": "anhle"}  
+    output.update(answers)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(answers, f, ensure_ascii=False, indent=2)
-
+        json.dump(output, f, ensure_ascii=False, indent=2)
 
 def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: str = "data/output.json"):
     # Load indexes and models
