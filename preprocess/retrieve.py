@@ -57,6 +57,4 @@ def retrieve(query, faiss_idx, bm25, meta, model, top_k=FINAL_TOP_K, mode="hybri
     for idx in combined[:top_k]:
         if idx < len(meta):
             chunks.append(meta[idx])
-
     return chunks
-

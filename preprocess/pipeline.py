@@ -24,7 +24,7 @@ def save_answers(answers: dict[str, str], path: str = "data/output.json") -> Non
     with open(path, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: str = "data/output.json"):
+def run_pipeline(questions_path="data/leaderboard_queries.txt", output_path="data/output.json", mode="hybrid"):
     # Load indexes and models
     faiss_index, bm25_index, metadata, model = load_indexes()
 
@@ -36,9 +36,8 @@ def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: s
     failed = []
 
     for qid, question in questions.items():
-        logger.info(f"[{qid}/{total}] {question}")
         try:
-            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode="hybrid")
+            chunks = retrieve(question, faiss_index, bm25_index, metadata, model, mode=mode)
             answer = generate(question, chunks)
             answers[qid] = answer
             logger.info(f"  → {answer}")
@@ -58,6 +57,7 @@ def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: s
 
 if __name__ == "__main__":
     import sys
-    questions_path = sys.argv[1] if len(sys.argv) > 1 else "data/test_set_day_3.txt"
+    questions_path = sys.argv[1] if len(sys.argv) > 1 else "data/leaderboard_queries.txt"
     output_path    = sys.argv[2] if len(sys.argv) > 2 else "data/output.json"
-    run_pipeline(questions_path, output_path)
+    mode           = sys.argv[3] if len(sys.argv) > 3 else "hybrid"
+    run_pipeline(questions_path, output_path, mode)
