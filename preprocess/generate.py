@@ -46,7 +46,7 @@ Question: {query}</s>
 
 def call_llm(prompt):
     tokenizer, model = load_model()
-    inputs = tokenizer(prompt, return_tensors="pt")
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)  
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
@@ -57,7 +57,6 @@ def call_llm(prompt):
         )
     generated = outputs[0][inputs["input_ids"].shape[1]:]
     return tokenizer.decode(generated, skip_special_tokens=True).strip()
-
 
 def generate(query, chunks):
     if not chunks:
