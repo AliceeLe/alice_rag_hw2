@@ -1,11 +1,13 @@
 import logging
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-MODEL_ID       = "google/flan-t5-base"
-MAX_NEW_TOKENS = 128
+MODEL_ID       = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+MAX_NEW_TOKENS = 256
+TEMPERATURE    = 0.1
 
 _tokenizer = None
 _model     = None
@@ -16,8 +18,8 @@ def load_model():
     if _model is not None:
         return _tokenizer, _model
     logger.info(f"Loading {MODEL_ID}...")
-    _tokenizer = T5Tokenizer.from_pretrained(MODEL_ID)
-    _model = T5ForConditionalGeneration.from_pretrained(MODEL_ID)
+    _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    _model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
     _model.eval()
     logger.info("Model loaded.")
     return _tokenizer, _model
@@ -26,28 +28,42 @@ def load_model():
 def build_prompt(query, chunks):
     context_parts = []
     for i, chunk in enumerate(chunks[:2]):
-        text = " ".join(chunk["text"].split()[:100])  # trim to 100 words per chunk
+        text = " ".join(chunk["text"].split()[:150])
         context_parts.append(text)
     context = " ".join(context_parts)
 
-    return f"Answer the question based on the context and the info provided. Context: {context} Question: {query} Answer:"
+    # TinyLlama uses ChatML format
+    return f"""<|system|>
+You are a helpful assistant answering questions about Pittsburgh and CMU. Use only the context provided. If the answer is not in the context, say "I don't know". Be concise.</s>
+<|user|>
+Context: {context}
+
+Question: {query}</s>
+<|assistant|>"""
 
 
 def call_llm(prompt):
     tokenizer, model = load_model()
-    inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
-    outputs = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+    inputs = tokenizer(prompt, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS,
+            temperature=TEMPERATURE,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    generated = outputs[0][inputs["input_ids"].shape[1]:]
+    return tokenizer.decode(generated, skip_special_tokens=True).strip()
 
 
 def generate(query, chunks):
     if not chunks:
-        return "N/A"
+        return "I don't know."
     try:
-        prompt = build_prompt(query, chunks)
-        answer = call_llm(prompt)
+        answer = call_llm(build_prompt(query, chunks))
         logger.info(f"Answer: {answer[:100]}")
         return answer
     except Exception as e:
         logger.error(f"Generation failed: {e}")
-        return "N/A"
+        return "I don't know."
