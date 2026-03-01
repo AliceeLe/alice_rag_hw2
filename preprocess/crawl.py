@@ -57,7 +57,6 @@ SKIP_PATTERNS = [
     "Special:", "Talk:", "User:", "File:", "Help:", "Template:",
 ]
 
-
 def is_valid_url(url):
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:

@@ -1,3 +1,5 @@
+import os
+os.makedirs("data", exist_ok=True)
 import re, hashlib, logging
 
 logger = logging.getLogger(__name__)

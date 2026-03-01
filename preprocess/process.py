@@ -1,3 +1,5 @@
+import os
+os.makedirs("data", exist_ok=True)
 import json, logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scrape import read_pdf, read_html
@@ -56,6 +58,7 @@ def process_pdf(urls: list[str], max_workers: int = 4) -> None:
                 logger.error(f"Unexpected error for {futures[future]}: {e}")
 
     logger.info("PDF done.")
+
 
 if __name__ == "__main__":
     with open("data/crawled_urls.json") as f:

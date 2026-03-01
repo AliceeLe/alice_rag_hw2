@@ -17,6 +17,9 @@ def normalize_text(text):
 
 def read_html(url):
     try:
+        if "wikipedia.org/wiki/" in url:
+            return read_wikipedia(url)
+
         html_content = fetch_url(url)
         if not html_content:
             logger.warning(f"Empty response for {url}")
@@ -73,3 +76,33 @@ def read_pdf(url: str):
  
     except Exception as e:
         return None
+
+def read_wikipedia(url: str) -> dict | None:
+    # Extract article title from URL
+    # e.g. https://en.wikipedia.org/wiki/Pittsburgh → Pittsburgh
+    title = url.split("/wiki/")[-1]
+    
+    api_url = "https://en.wikipedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "format": "json",
+        "titles": title,
+        "prop": "extracts",
+        "explaintext": True,  # plain text, no HTML
+    }
+    
+    resp = requests.get(api_url, params=params)
+    pages = resp.json()["query"]["pages"]
+    page = next(iter(pages.values()))
+    
+    if "extract" not in page:
+        return None
+    
+    return {
+        "doc_id": url_to_id(url),
+        "source_url": url,
+        "title": page.get("title", ""),
+        "text": normalize_text(page["extract"]),
+        "doc_type": "html",
+        "crawl_timestamp": datetime.datetime.now().isoformat(),
+    }

@@ -1,3 +1,5 @@
+import os
+os.makedirs("data", exist_ok=True)
 import logging, faiss, bm25s
 import numpy as np
 from embed import load_chunks
