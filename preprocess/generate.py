@@ -21,9 +21,7 @@ def load_model():
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     _model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
-        torch_dtype=torch.float16, 
-        device_map="auto"          
-    )
+        torch_dtype=torch.float16    ).to("cuda")
     _model.eval()
     logger.info("Model loaded.")
     return _tokenizer, _model
