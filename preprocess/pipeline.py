@@ -1,4 +1,4 @@
-import json, logging, sys
+import json, logging, os
 
 from retrieve import load_indexes, retrieve
 from generate import generate
@@ -6,55 +6,58 @@ from generate import generate
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-def load_questions() -> dict[str, str]:
+
+def load_questions(path: str = "data/test_set_day_3.txt") -> dict[str, str]:
     questions = {}
-    with open("data/test_set_day_3.txt", "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f, start=1):
             line = line.strip()
-            questions[str(i)] = line
-    logger.info(f"Loaded questions ")
+            if line:
+                questions[str(i)] = line
+    logger.info(f"Loaded {len(questions)} questions from {path}")
     return questions
 
-def save_answers(answers: dict[str, str]) -> None:
-    import os
-    os.makedirs(os.path.dirname("data/output.json"), exist_ok=True)
-    with open("data/output.json", "w", encoding="utf-8") as f:
+
+def save_answers(answers: dict[str, str], path: str = "data/output.json") -> None:
+    os.makedirs("data", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(answers, f, ensure_ascii=False, indent=2)
 
 
-def run_pipeline():
-    # Load indices, metadata and model
+def run_pipeline(questions_path: str = "data/test_set_day_3.txt", output_path: str = "data/output.json"):
+    # Load indexes and models
     faiss_index, bm25_index, metadata, model = load_indexes()
 
     # Load questions
-    questions = load_questions()
+    questions = load_questions(questions_path)
+    total = len(questions)
 
-    # Process each question
     answers = {}
     failed = []
 
     for qid, question in questions.items():
+        logger.info(f"[{qid}/{total}] {question}")
         try:
-            # Retrieve relevant chunks
             chunks = retrieve(question, faiss_index, bm25_index, metadata, model)
-
-            # Generate answer
             answer = generate(question, chunks)
-
             answers[qid] = answer
             logger.info(f"  → {answer}")
-
         except Exception as e:
             logger.error(f"  Failed: {e}")
             answers[qid] = "I don't know."
             failed.append(qid)
 
         # Save after every question in case of crashes
-        save_answers(answers)
-        print("Done")
+        save_answers(answers, output_path)
 
-    logger.info(f"Output saved to {"data/output.json"}")
+    logger.info(f"\nDone. {total - len(failed)}/{total} answered.")
+    if failed:
+        logger.warning(f"Failed: {failed}")
+    logger.info(f"Output saved to {output_path}")
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    import sys
+    questions_path = sys.argv[1] if len(sys.argv) > 1 else "data/test_set_day_3.txt"
+    output_path    = sys.argv[2] if len(sys.argv) > 2 else "data/output.json"
+    run_pipeline(questions_path, output_path)
