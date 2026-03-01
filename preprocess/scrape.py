@@ -17,7 +17,7 @@ def normalize_text(text):
 
 def read_html(url):
     try:
-        if "wikipedia.org/wiki/" in url:
+        if "en.wikipedia.org/wiki" in url:
             return read_wikipedia(url)
 
         html_content = fetch_url(url)
@@ -78,8 +78,6 @@ def read_pdf(url: str):
         return None
 
 def read_wikipedia(url: str) -> dict | None:
-    # Extract article title from URL
-    # e.g. https://en.wikipedia.org/wiki/Pittsburgh → Pittsburgh
     title = url.split("/wiki/")[-1]
     
     api_url = "https://en.wikipedia.org/w/api.php"
@@ -88,10 +86,14 @@ def read_wikipedia(url: str) -> dict | None:
         "format": "json",
         "titles": title,
         "prop": "extracts",
-        "explaintext": True,  # plain text, no HTML
+        "explaintext": True,
     }
     
-    resp = requests.get(api_url, params=params)
+    headers = {
+        "User-Agent": "PittsburghRAGBot/1.0 (CMU 11711 Assignment; student project)"
+    }
+    
+    resp = requests.get(api_url, params=params, headers=headers)
     pages = resp.json()["query"]["pages"]
     page = next(iter(pages.values()))
     
