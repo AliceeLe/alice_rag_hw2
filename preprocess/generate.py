@@ -17,16 +17,16 @@ def load_model():
     global _tokenizer, _model
     if _model is not None:
         return _tokenizer, _model
-    torch.cuda.empty_cache()  
+    
+    torch.cuda.empty_cache()
     logger.info(f"Loading {MODEL_ID}...")
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     _model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         dtype=torch.float16,
-        device_map="auto"
     )
-    # remove the .to("cuda") line
-    _model.eval()    
+    _model = _model.cuda()  
+    _model.eval()
     logger.info("Model loaded.")
     return _tokenizer, _model
 
@@ -73,3 +73,11 @@ def generate(query, chunks, preloaded_model=None, preloaded_tokenizer=None):
     except Exception as e:
         logger.error(f"Generation failed: {e}")
         return "I don't know."
+    
+def generate_baseline(query):
+    prompt = f"""<|system|>
+You are a helpful assistant answering questions about Pittsburgh and CMU. Be concise.</s>
+<|user|>
+Question: {query}</s>
+<|assistant|>"""
+    return call_llm(prompt)
