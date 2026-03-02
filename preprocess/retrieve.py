@@ -17,7 +17,7 @@ def load_indexes():
     # Load metadata 
     with open("data/metadata.json", "r", encoding="utf-8") as f:
         meta = json.load(f)
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
     return idx, bm25, meta, model
 
 

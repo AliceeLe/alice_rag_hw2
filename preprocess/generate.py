@@ -17,6 +17,7 @@ def load_model():
     global _tokenizer, _model
     if _model is not None:
         return _tokenizer, _model
+    torch.cuda.empty_cache()  
     logger.info(f"Loading {MODEL_ID}...")
     _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     _model = AutoModelForCausalLM.from_pretrained(
