@@ -45,9 +45,10 @@ Question: {query}</s>
 <|assistant|>"""
 
 
-def call_llm(prompt):
-    tokenizer, model = load_model()
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)  
+def call_llm(prompt, model=None, tokenizer=None):
+    if model is None or tokenizer is None:
+        tokenizer, model = load_model()
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
@@ -59,12 +60,12 @@ def call_llm(prompt):
     generated = outputs[0][inputs["input_ids"].shape[1]:]
     return tokenizer.decode(generated, skip_special_tokens=True).strip()
 
-def generate(query, chunks):
+def generate(query, chunks, preloaded_model=None, preloaded_tokenizer=None):
     if not chunks:
         return "I don't know."
     try:
-        answer = call_llm(build_prompt(query, chunks))
-        logger.info(f"Answer: {answer[:100]}")
+        prompt = build_prompt(query, chunks)
+        answer = call_llm(prompt, preloaded_model, preloaded_tokenizer)
         return answer
     except Exception as e:
         logger.error(f"Generation failed: {e}")
